@@ -1,0 +1,57 @@
+:root {
+  --fondo: #0f1115;
+  --fondo2: #161a22;
+  --texto: #e8e8e8;
+  --muted: #a8a8a8;
+  --acento: #7dd3fc;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: radial-gradient(1200px 700px at 20% 0%, #1b2030 0%, var(--fondo) 55%);
+  color: var(--texto);
+}
+
+.app {
+  padding: 18px 22px;
+}
+
+.encabezado {
+  max-width: 980px;
+  margin: 8px auto 18px;
+  padding: 14px 16px;
+  background: rgba(22, 26, 34, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px 10px 22px 14px; /* un toque irregular */
+}
+
+.encabezado h1 {
+  margin: 0;
+  font-size: 30px;
+  letter-spacing: 0.2px;
+}
+
+.sub {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.contenido {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.bloque {
+  padding: 16px 18px;
+  background: rgba(22, 26, 34, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px 22px 12px 18px;
+}
+
+.bloque h2 {
+  margin: 0 0 10px;
+  font-size: 20px;
+  color: var(--acento);
+}
+
