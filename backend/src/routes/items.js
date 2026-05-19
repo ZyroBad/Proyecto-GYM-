@@ -137,4 +137,52 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+router.delete('/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    // primero borro registros para no pelearme con la foreign key
+    await pool.query('DELETE FROM registros WHERE itemId = $1', [id]);
+
+    const borrado = await pool.query('DELETE FROM items WHERE id = $1 RETURNING id', [id]);
+
+    if (!borrado.rows.length) {
+      return res.status(404).json({ error: 'No existe ese item' });
+    }
+
+    res.json({ ok: true, id });
+  } catch (err) {
+    console.log('Error borrando item:', err);
+    res.status(500).json({ error: 'No se pudo borrar el item' });
+  }
+});
+
+router.post('/:id/registro', async (req, res) => {
+  try {
+    const itemId = req.params.id;
+    const { fecha, nota } = req.body || {};
+
+    // solo para asegurar que existe
+    const existe = await pool.query('SELECT id FROM items WHERE id = $1', [itemId]);
+    if (!existe.rows.length) {
+      return res.status(404).json({ error: 'No existe ese item' });
+    }
+
+    const fechaFinal = fecha || new Date().toISOString();
+    const notaFinal = nota ? String(nota).trim() : null;
+
+    const insert = await pool.query(
+      `INSERT INTO registros (itemId, fecha, nota)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [itemId, fechaFinal, notaFinal]
+    );
+
+    res.status(201).json(insert.rows[0]);
+  } catch (err) {
+    console.log('Error creando registro:', err);
+    res.status(500).json({ error: 'No se pudo crear el registro' });
+  }
+});
+
 module.exports = router;
