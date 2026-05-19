@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const categorias = [
   { id: 'fuerza', nombre: 'fuerza' },
@@ -9,7 +9,12 @@ const categorias = [
 
 const estados = ['pendiente', 'completada', 'pausada'];
 
-export default function FormularioSesion({ onGuardar }) {
+export default function FormularioSesion({
+  onGuardar,
+  sesionEditando,
+  onActualizar,
+  onCancelarEdicion
+}) {
   const [nombre, setNombre] = useState('');
   const [categoriaId, setCategoriaId] = useState('fuerza');
   const [estado, setEstado] = useState('pendiente');
@@ -18,11 +23,46 @@ export default function FormularioSesion({ onGuardar }) {
   const [duracionMinutos, setDuracionMinutos] = useState(45);
   const [notas, setNotas] = useState('');
 
+  const estaEditando = Boolean(sesionEditando);
+
+  useEffect(() => {
+    if (!sesionEditando) return;
+
+    // cuando le doy "Editar", cargo los valores en el form
+    setNombre(sesionEditando.nombre || '');
+    setCategoriaId(sesionEditando.categoriaId || 'fuerza');
+    setEstado(sesionEditando.estado || 'pendiente');
+    setPuntuacion(sesionEditando.puntuacion ?? 3);
+    setFechaActividad(sesionEditando.fechaActividad || '');
+    setDuracionMinutos(sesionEditando.atributos?.duracionMinutos ?? 45);
+    setNotas(sesionEditando.notas || '');
+  }, [sesionEditando]);
+
   function enviarFormulario(e) {
     e.preventDefault();
 
     const nombreLimpio = nombre.trim();
     if (!nombreLimpio) return;
+
+    if (estaEditando) {
+      const sesionActualizada = {
+        ...sesionEditando,
+        nombre: nombreLimpio,
+        categoriaId,
+        estado,
+        puntuacion: Number(puntuacion),
+        fechaActividad: fechaActividad || null,
+        notas: notas.trim(),
+        atributos: {
+          ...sesionEditando.atributos,
+          duracionMinutos: Number(duracionMinutos)
+        }
+      };
+
+      console.log('Actualizando sesión:', sesionActualizada.nombre);
+      onActualizar(sesionActualizada);
+      return;
+    }
 
     const nuevaSesion = {
       id: crypto.randomUUID(),
@@ -125,10 +165,14 @@ export default function FormularioSesion({ onGuardar }) {
         />
       </label>
 
-      <button type="submit" style={{ marginTop: 10 }}>
-        Guardar sesión
-      </button>
+      <div style={{ display: 'flex', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
+        <button type="submit">{estaEditando ? 'Guardar cambios' : 'Guardar sesión'}</button>
+        {estaEditando ? (
+          <button type="button" onClick={onCancelarEdicion}>
+            Cancelar
+          </button>
+        ) : null}
+      </div>
     </form>
   );
 }
-
