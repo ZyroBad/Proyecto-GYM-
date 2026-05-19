@@ -102,13 +102,35 @@ export default function App() {
     }
   }
 
-  function archivarSesion(id) {
+  async function archivarSesion(id) {
+    let sesionAEnviar = null;
+
     setSesiones((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, activo: false } : s))
+      prev.map((s) => {
+        if (s.id !== id) return s;
+        const archivada = { ...s, activo: false };
+        sesionAEnviar = archivada;
+        return archivada;
+      })
     );
 
     // si justo estaba editando esa sesión, mejor salir
     if (sesionEditando?.id === id) setSesionEditando(null);
+
+    setErrorBackend('');
+
+    // archivar = update (activo=false). DELETE lo dejamos para "borrar definitivo" después si querés.
+    try {
+      if (sesionAEnviar) {
+        await apiJson('/api/items/' + id, {
+          method: 'PUT',
+          body: JSON.stringify(sesionAEnviar)
+        });
+      }
+    } catch (err) {
+      console.log('No se pudo archivar en backend:', err);
+      setErrorBackend('No se pudo archivar en backend (quedó en local).');
+    }
   }
 
   return (
