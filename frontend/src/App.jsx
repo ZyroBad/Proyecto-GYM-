@@ -19,19 +19,31 @@ export default function App() {
     localStorage.setItem('sesionesGym', JSON.stringify(sesiones));
   }, [sesiones]);
 
+  function apiBaseUrl() {
+    return import.meta.env.VITE_API_URL || 'http://localhost:4000';
+  }
+
+  async function apiJson(ruta, opciones) {
+    const resp = await fetch(apiBaseUrl() + ruta, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      ...opciones
+    });
+
+    if (!resp.ok) {
+      throw new Error('HTTP ' + resp.status);
+    }
+
+    return resp.json();
+  }
+
   async function cargarDesdeBackend() {
     setCargandoBackend(true);
     setErrorBackend('');
 
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-      const resp = await fetch(baseUrl + '/api/items');
-
-      if (!resp.ok) {
-        throw new Error('HTTP ' + resp.status);
-      }
-
-      const items = await resp.json();
+      const items = await apiJson('/api/items');
 
       // modo "híbrido" por ahora: lo de backend gana si hay mismo id
       setSesiones((prev) => {
@@ -48,8 +60,20 @@ export default function App() {
     }
   }
 
-  function guardarSesion(nuevaSesion) {
+  async function guardarSesion(nuevaSesion) {
+    // optimista: la muestro de una
     setSesiones((prev) => [nuevaSesion, ...prev]);
+    setErrorBackend('');
+
+    try {
+      await apiJson('/api/items', {
+        method: 'POST',
+        body: JSON.stringify(nuevaSesion)
+      });
+    } catch (err) {
+      console.log('No se pudo guardar en backend:', err);
+      setErrorBackend('No se pudo guardar en backend (quedó en local).');
+    }
   }
 
   function iniciarEdicion(sesion) {
@@ -60,11 +84,22 @@ export default function App() {
     setSesionEditando(null);
   }
 
-  function actualizarSesion(sesionActualizada) {
+  async function actualizarSesion(sesionActualizada) {
     setSesiones((prev) =>
       prev.map((s) => (s.id === sesionActualizada.id ? sesionActualizada : s))
     );
     setSesionEditando(null);
+    setErrorBackend('');
+
+    try {
+      await apiJson('/api/items/' + sesionActualizada.id, {
+        method: 'PUT',
+        body: JSON.stringify(sesionActualizada)
+      });
+    } catch (err) {
+      console.log('No se pudo actualizar en backend:', err);
+      setErrorBackend('No se pudo actualizar en backend (quedó en local).');
+    }
   }
 
   function archivarSesion(id) {
