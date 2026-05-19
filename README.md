@@ -53,9 +53,10 @@ Endpoint rápido para ver si prendió:
 
 ## Screenshots
 
-Pendiente (todavía).
+Primera captura (fase 1):
+
+![UI - Mi Colección Personal](docs/screenshots/fase1-ui.png)
 
 ## Nota sobre ExerciseDB (más adelante)
 
 Más adelante quiero probar la API de ExerciseDB (RapidAPI) para sugerir ejercicios o autocompletar nombres, pero en esta fase todavía no está integrada.
-
