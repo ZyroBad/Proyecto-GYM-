@@ -11,6 +11,7 @@ export default function App() {
       return [];
     }
   });
+  const [sesionEditando, setSesionEditando] = useState(null);
 
   useEffect(() => {
     localStorage.setItem('sesionesGym', JSON.stringify(sesiones));
@@ -20,10 +21,28 @@ export default function App() {
     setSesiones((prev) => [nuevaSesion, ...prev]);
   }
 
+  function iniciarEdicion(sesion) {
+    setSesionEditando(sesion);
+  }
+
+  function cancelarEdicion() {
+    setSesionEditando(null);
+  }
+
+  function actualizarSesion(sesionActualizada) {
+    setSesiones((prev) =>
+      prev.map((s) => (s.id === sesionActualizada.id ? sesionActualizada : s))
+    );
+    setSesionEditando(null);
+  }
+
   function archivarSesion(id) {
     setSesiones((prev) =>
       prev.map((s) => (s.id === id ? { ...s, activo: false } : s))
     );
+
+    // si justo estaba editando esa sesión, mejor salir
+    if (sesionEditando?.id === id) setSesionEditando(null);
   }
 
   return (
@@ -35,13 +54,22 @@ export default function App() {
 
       <main className="contenido">
         <div className="bloque">
-          <h2>Nueva sesión</h2>
-          <FormularioSesion onGuardar={guardarSesion} />
+          <h2>{sesionEditando ? 'Editar sesión' : 'Nueva sesión'}</h2>
+          <FormularioSesion
+            onGuardar={guardarSesion}
+            sesionEditando={sesionEditando}
+            onActualizar={actualizarSesion}
+            onCancelarEdicion={cancelarEdicion}
+          />
         </div>
 
         <div className="bloque" style={{ marginTop: 14 }}>
           <h2>Sesiones</h2>
-          <ListaSesiones sesiones={sesiones} onArchivar={archivarSesion} />
+          <ListaSesiones
+            sesiones={sesiones}
+            onArchivar={archivarSesion}
+            onEditar={iniciarEdicion}
+          />
         </div>
       </main>
     </div>

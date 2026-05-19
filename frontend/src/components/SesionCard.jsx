@@ -1,4 +1,4 @@
-export default function SesionCard({ sesion, onArchivar }) {
+export default function SesionCard({ sesion, onArchivar, onEditar }) {
   return (
     <article
       style={{
@@ -20,12 +20,16 @@ export default function SesionCard({ sesion, onArchivar }) {
         </div>
 
         {sesion.activo ? (
-          <button type="button" onClick={() => onArchivar(sesion.id)}>
-            Archivar
-          </button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <button type="button" onClick={() => onEditar?.(sesion)}>
+              Editar
+            </button>
+            <button type="button" onClick={() => onArchivar(sesion.id)}>
+              Archivar
+            </button>
+          </div>
         ) : null}
       </div>
     </article>
   );
 }
-
