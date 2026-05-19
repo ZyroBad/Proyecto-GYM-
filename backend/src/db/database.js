@@ -13,11 +13,11 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS items (
       id TEXT PRIMARY KEY,
       nombre TEXT NOT NULL,
-      categoriaId TEXT NOT NULL,
+      "categoriaId" TEXT NOT NULL,
       estado TEXT NOT NULL,
       puntuacion INTEGER,
-      fechaRegistro TEXT,
-      fechaActividad TEXT,
+      "fechaRegistro" TEXT,
+      "fechaActividad" TEXT,
       notas TEXT,
       atributos JSONB,
       activo BOOLEAN DEFAULT TRUE
@@ -27,7 +27,7 @@ async function initDb() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS registros (
       id SERIAL PRIMARY KEY,
-      itemId TEXT NOT NULL REFERENCES items(id),
+      "itemId" TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
       fecha TEXT NOT NULL,
       nota TEXT
     );

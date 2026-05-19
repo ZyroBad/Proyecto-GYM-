@@ -10,7 +10,7 @@ const estadosValidos = ['pendiente', 'completada', 'pausada'];
 router.get('/', async (req, res) => {
   try {
     const resultado = await pool.query(
-      'SELECT * FROM items ORDER BY fechaRegistro DESC NULLS LAST'
+      'SELECT * FROM items ORDER BY "fechaRegistro" DESC NULLS LAST'
     );
     res.json(resultado.rows);
   } catch (err) {
@@ -49,7 +49,7 @@ router.post('/', async (req, res) => {
 
     const insert = await pool.query(
       `INSERT INTO items
-        (id, nombre, categoriaId, estado, puntuacion, fechaRegistro, fechaActividad, notas, atributos, activo)
+        (id, nombre, "categoriaId", estado, puntuacion, "fechaRegistro", "fechaActividad", notas, atributos, activo)
       VALUES
         ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       RETURNING *`,
@@ -102,11 +102,11 @@ router.put('/:id', async (req, res) => {
     const update = await pool.query(
       `UPDATE items SET
         nombre = $2,
-        categoriaId = $3,
+        "categoriaId" = $3,
         estado = $4,
         puntuacion = $5,
-        fechaRegistro = COALESCE($6, fechaRegistro),
-        fechaActividad = $7,
+        "fechaRegistro" = COALESCE($6, "fechaRegistro"),
+        "fechaActividad" = $7,
         notas = $8,
         atributos = $9,
         activo = $10
@@ -141,9 +141,6 @@ router.delete('/:id', async (req, res) => {
   try {
     const id = req.params.id;
 
-    // primero borro registros para no pelearme con la foreign key
-    await pool.query('DELETE FROM registros WHERE itemId = $1', [id]);
-
     const borrado = await pool.query('DELETE FROM items WHERE id = $1 RETURNING id', [id]);
 
     if (!borrado.rows.length) {
@@ -172,7 +169,7 @@ router.post('/:id/registro', async (req, res) => {
     const notaFinal = nota ? String(nota).trim() : null;
 
     const insert = await pool.query(
-      `INSERT INTO registros (itemId, fecha, nota)
+      `INSERT INTO registros ("itemId", fecha, nota)
        VALUES ($1, $2, $3)
        RETURNING *`,
       [itemId, fechaFinal, notaFinal]
