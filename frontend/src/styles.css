@@ -1,29 +1,65 @@
-:root {
-  --fondo: #0f1115;
-  --fondo2: #161a22;
-  --texto: #e8e8e8;
-  --muted: #a8a8a8;
-  --acento: #7dd3fc;
-}
-
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background: radial-gradient(1200px 700px at 20% 0%, #1b2030 0%, var(--fondo) 55%);
-  color: var(--texto);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  transition: background 0.2s, color 0.2s;
+}
+
+body[data-theme='claro'] {
+  --bg-page: #d2d2d2;
+  --bg-app: #f8f8f8;
+  --bg-card: #e8e8e8;
+  --bg-card-light: #ffffff;
+
+  --text-primary: #0a0a0a;
+  --text-secondary: #545454;
+  --text-muted: #898685;
+  --text-light: #ffffff;
+
+  --accent: #de6542;
+  --accent-dark: #c85c40;
+  --accent-soft: #df6b4a;
+
+  --border-soft: #dcdcdc;
+  --shadow-soft: rgba(0, 0, 0, 0.12);
+  --shadow-card: rgba(0, 0, 0, 0.08);
+}
+
+body[data-theme='oscuro'] {
+  /* oscuro tipo sidebar, con el naranja de acento */
+  --bg-page: #333331;
+  --bg-app: #404040;
+  --bg-card: #4a4a48;
+  --bg-card-light: #545454;
+
+  --text-primary: #ffffff;
+  --text-secondary: #f5f5f5;
+  --text-muted: #b8b8b8;
+  --text-light: #ffffff;
+
+  --accent: #de6542;
+  --accent-dark: #c85c40;
+  --accent-soft: #df6b4a;
+
+  --border-soft: rgba(255, 255, 255, 0.12);
+  --shadow-soft: rgba(0, 0, 0, 0.35);
+  --shadow-card: rgba(0, 0, 0, 0.25);
 }
 
 .app {
+  min-height: 100vh;
   padding: 18px 22px;
 }
 
 .encabezado {
-  max-width: 980px;
-  margin: 8px auto 18px;
-  padding: 14px 16px;
-  background: rgba(22, 26, 34, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px 10px 22px 14px; /* un toque irregular */
+  max-width: 1280px;
+  margin: 10px auto 18px;
+  padding: 18px 18px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-soft);
+  border-radius: 26px 12px 34px 16px; /* irregular a propósito */
+  box-shadow: 0 20px 55px var(--shadow-soft);
 }
 
 .encabezado h1 {
@@ -34,24 +70,59 @@ body {
 
 .sub {
   margin: 8px 0 0;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 .contenido {
-  max-width: 980px;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
 .bloque {
   padding: 16px 18px;
-  background: rgba(22, 26, 34, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
   border-radius: 12px 22px 12px 18px;
+  box-shadow: 0 12px 30px var(--shadow-card);
 }
 
 .bloque h2 {
   margin: 0 0 10px;
   font-size: 20px;
-  color: var(--acento);
+  color: var(--accent);
 }
 
+input,
+select,
+textarea {
+  background: var(--bg-card-light);
+  color: var(--text-primary);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px 10px 16px 12px;
+  padding: 8px 10px;
+  outline: none;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
