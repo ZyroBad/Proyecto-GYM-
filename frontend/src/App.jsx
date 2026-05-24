@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import FormularioSesion from './components/FormularioSesion.jsx';
 import ListaSesiones from './components/ListaSesiones.jsx';
 import { useStorage } from './context/StorageContext.jsx';
@@ -17,6 +17,7 @@ export default function App() {
   const { tema, alternarTema } = useTheme();
 
   const [sesionEditando, setSesionEditando] = useState(null);
+  const autoReloadRef = useRef(null);
 
   function iniciarEdicion(sesion) {
     setSesionEditando(sesion);
@@ -44,6 +45,27 @@ export default function App() {
 
     await actualizarItem({ ...sesion, activo: false });
   }
+
+  // useRef #2: guardar id de intervalo (sin re-render)
+  useEffect(() => {
+    if (autoReloadRef.current) {
+      clearInterval(autoReloadRef.current);
+      autoReloadRef.current = null;
+    }
+
+    // solo auto-refresh si está en API (así se siente vivo)
+    if (modo !== 'api') return;
+
+    autoReloadRef.current = setInterval(() => {
+      // no lo await para que no congele si tarda
+      obtenerItems();
+    }, 12000);
+
+    return () => {
+      if (autoReloadRef.current) clearInterval(autoReloadRef.current);
+      autoReloadRef.current = null;
+    };
+  }, [modo, obtenerItems]);
 
   return (
     <div className="app">

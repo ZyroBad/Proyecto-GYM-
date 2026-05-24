@@ -1,11 +1,5 @@
-import { useEffect, useState } from 'react';
-
-const categorias = [
-  { id: 'fuerza', nombre: 'fuerza' },
-  { id: 'cardio', nombre: 'cardio' },
-  { id: 'flexibilidad', nombre: 'flexibilidad' },
-  { id: 'deportes', nombre: 'deportes' }
-];
+import { useEffect, useRef, useState } from 'react';
+import { CATEGORIAS } from '../utils/categorias.js';
 
 const estados = ['pendiente', 'completada', 'pausada'];
 
@@ -15,6 +9,7 @@ export default function FormularioSesion({
   onActualizar,
   onCancelarEdicion
 }) {
+  const nombreRef = useRef(null);
   const [nombre, setNombre] = useState('');
   const [categoriaId, setCategoriaId] = useState('fuerza');
   const [estado, setEstado] = useState('pendiente');
@@ -37,6 +32,19 @@ export default function FormularioSesion({
     setDuracionMinutos(sesionEditando.atributos?.duracionMinutos ?? 45);
     setNotas(sesionEditando.notas || '');
   }, [sesionEditando]);
+
+  // useRef #1: Ctrl+N enfoca el input de nombre
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.ctrlKey && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        nombreRef.current?.focus();
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   function enviarFormulario(e) {
     e.preventDefault();
@@ -87,6 +95,9 @@ export default function FormularioSesion({
     // reseteo simple (no quiero ponerlo ultra perfecto por ahora)
     setNombre('');
     setNotas('');
+
+    // useRef #1: después de guardar, vuelvo a enfocar el nombre
+    nombreRef.current?.focus();
   }
 
   return (
@@ -94,6 +105,7 @@ export default function FormularioSesion({
       <label>
         Nombre
         <input
+          ref={nombreRef}
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Ej: Push pesado pecho/tríceps"
@@ -104,9 +116,9 @@ export default function FormularioSesion({
         <label>
           Categoría
           <select value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
-            {categorias.map((c) => (
+            {CATEGORIAS.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.nombre}
+                {c.emoji} {c.nombre}
               </option>
             ))}
           </select>
