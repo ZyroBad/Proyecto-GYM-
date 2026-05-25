@@ -1,18 +1,23 @@
 import SesionCard from './SesionCard.jsx';
 
-export default function ListaSesiones({ sesiones, onArchivar, onEditar }) {
+export default function ListaSesiones({ sesiones, onEditar, onArchivar }) {
   if (!sesiones.length) {
-    return <p style={{ color: '#a8a8a8' }}>Todavía no tenés sesiones guardadas.</p>;
+    return (
+      <div className="empty-state">
+        <i className="ti ti-calendar-off" aria-hidden="true" />
+        <p>Todavía no tenés sesiones registradas.</p>
+      </div>
+    );
   }
 
   return (
-    <div style={{ display: 'grid', gap: 10 }}>
+    <div className="flex-col gap-3">
       {sesiones.map((sesion) => (
         <SesionCard
           key={sesion.id}
           sesion={sesion}
-          onArchivar={onArchivar}
           onEditar={onEditar}
+          onArchivar={onArchivar}
         />
       ))}
     </div>

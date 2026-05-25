@@ -1,189 +1,195 @@
 import { useEffect, useRef, useState } from 'react';
 import { CATEGORIAS } from '../utils/categorias.js';
 
-const estados = ['pendiente', 'completada', 'pausada'];
+const ESTADOS = ['pendiente', 'completada', 'pausada'];
+
+const DEFAULT = {
+  nombre: '',
+  categoriaId: 'fuerza',
+  estado: 'pendiente',
+  puntuacion: 3,
+  fechaActividad: '',
+  duracionMinutos: 45,
+  notas: '',
+};
 
 export default function FormularioSesion({
   onGuardar,
   sesionEditando,
   onActualizar,
-  onCancelarEdicion
+  onCancelarEdicion,
 }) {
   const nombreRef = useRef(null);
-  const [nombre, setNombre] = useState('');
-  const [categoriaId, setCategoriaId] = useState('fuerza');
-  const [estado, setEstado] = useState('pendiente');
-  const [puntuacion, setPuntuacion] = useState(3);
-  const [fechaActividad, setFechaActividad] = useState('');
-  const [duracionMinutos, setDuracionMinutos] = useState(45);
-  const [notas, setNotas] = useState('');
-
+  const [form, setForm] = useState(DEFAULT);
   const estaEditando = Boolean(sesionEditando);
 
+  // Cargar datos al editar
   useEffect(() => {
     if (!sesionEditando) return;
-
-    // cuando le doy "Editar", cargo los valores en el form
-    setNombre(sesionEditando.nombre || '');
-    setCategoriaId(sesionEditando.categoriaId || 'fuerza');
-    setEstado(sesionEditando.estado || 'pendiente');
-    setPuntuacion(sesionEditando.puntuacion ?? 3);
-    setFechaActividad(sesionEditando.fechaActividad || '');
-    setDuracionMinutos(sesionEditando.atributos?.duracionMinutos ?? 45);
-    setNotas(sesionEditando.notas || '');
+    setForm({
+      nombre:          sesionEditando.nombre ?? '',
+      categoriaId:     sesionEditando.categoriaId ?? 'fuerza',
+      estado:          sesionEditando.estado ?? 'pendiente',
+      puntuacion:      sesionEditando.puntuacion ?? 3,
+      fechaActividad:  sesionEditando.fechaActividad ?? '',
+      duracionMinutos: sesionEditando.atributos?.duracionMinutos ?? 45,
+      notas:           sesionEditando.notas ?? '',
+    });
   }, [sesionEditando]);
 
-  // useRef #1: Ctrl+N enfoca el input de nombre
+  // Ctrl+N enfoca el nombre
   useEffect(() => {
-    function onKeyDown(e) {
+    function onKey(e) {
       if (e.ctrlKey && e.key.toLowerCase() === 'n') {
         e.preventDefault();
         nombreRef.current?.focus();
       }
     }
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  function enviarFormulario(e) {
+  function set(field, value) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function handleSubmit(e) {
     e.preventDefault();
+    const nombre = form.nombre.trim();
+    if (!nombre) return;
 
-    const nombreLimpio = nombre.trim();
-    if (!nombreLimpio) return;
-
-    if (estaEditando) {
-      const sesionActualizada = {
-        ...sesionEditando,
-        nombre: nombreLimpio,
-        categoriaId,
-        estado,
-        puntuacion: Number(puntuacion),
-        fechaActividad: fechaActividad || null,
-        notas: notas.trim(),
-        atributos: {
-          ...sesionEditando.atributos,
-          duracionMinutos: Number(duracionMinutos)
-        }
-      };
-
-      console.log('Actualizando sesión:', sesionActualizada.nombre);
-      onActualizar(sesionActualizada);
-      return;
-    }
-
-    const nuevaSesion = {
-      id: crypto.randomUUID(),
-      nombre: nombreLimpio,
-      categoriaId,
-      estado,
-      puntuacion: Number(puntuacion),
-      fechaRegistro: new Date().toISOString(),
-      fechaActividad: fechaActividad || null,
-      notas: notas.trim(),
+    const payload = {
+      nombre,
+      categoriaId:     form.categoriaId,
+      estado:          form.estado,
+      puntuacion:      Number(form.puntuacion),
+      fechaActividad:  form.fechaActividad || null,
+      notas:           form.notas.trim(),
       atributos: {
-        duracionMinutos: Number(duracionMinutos),
-        ejercicios: [],
-        volumenTotal: 0
+        ...(sesionEditando?.atributos ?? {}),
+        duracionMinutos: Number(form.duracionMinutos),
       },
-      activo: true
     };
 
-    console.log('Guardando sesión:', nuevaSesion.nombre);
-    onGuardar(nuevaSesion);
-
-    // reseteo simple (no quiero ponerlo ultra perfecto por ahora)
-    setNombre('');
-    setNotas('');
-
-    // useRef #1: después de guardar, vuelvo a enfocar el nombre
-    nombreRef.current?.focus();
+    if (estaEditando) {
+      onActualizar({ ...sesionEditando, ...payload });
+    } else {
+      onGuardar({
+        id: crypto.randomUUID(),
+        ...payload,
+        fechaRegistro: new Date().toISOString(),
+        activo: true,
+      });
+      setForm(DEFAULT);
+      nombreRef.current?.focus();
+    }
   }
 
   return (
-    <form onSubmit={enviarFormulario}>
-      <label>
-        Nombre
-        <input
-          ref={nombreRef}
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          placeholder="Ej: Push pesado pecho/tríceps"
-        />
-      </label>
+    <form onSubmit={handleSubmit} noValidate>
+      <div className="form-grid">
 
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
-        <label>
-          Categoría
-          <select value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
+        <div className="form-field full">
+          <label htmlFor="nombre">Nombre de la sesión</label>
+          <input
+            id="nombre"
+            ref={nombreRef}
+            value={form.nombre}
+            onChange={(e) => set('nombre', e.target.value)}
+            placeholder="Ej: Push pesado pecho/tríceps"
+            required
+          />
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="categoriaId">Categoría</label>
+          <select
+            id="categoriaId"
+            value={form.categoriaId}
+            onChange={(e) => set('categoriaId', e.target.value)}
+          >
             {CATEGORIAS.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.emoji} {c.nombre}
               </option>
             ))}
           </select>
-        </label>
+        </div>
 
-        <label>
-          Estado
-          <select value={estado} onChange={(e) => setEstado(e.target.value)}>
-            {estados.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
+        <div className="form-field">
+          <label htmlFor="estado">Estado</label>
+          <select
+            id="estado"
+            value={form.estado}
+            onChange={(e) => set('estado', e.target.value)}
+          >
+            {ESTADOS.map((s) => (
+              <option key={s} value={s}>{s}</option>
             ))}
           </select>
-        </label>
+        </div>
 
-        <label>
-          Punt.
+        <div className="form-field">
+          <label htmlFor="duracionMinutos">Duración (min)</label>
           <input
+            id="duracionMinutos"
+            type="number"
+            min="5"
+            max="300"
+            value={form.duracionMinutos}
+            onChange={(e) => set('duracionMinutos', e.target.value)}
+          />
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="puntuacion">Puntuación (1–5)</label>
+          <input
+            id="puntuacion"
             type="number"
             min="1"
             max="5"
-            value={puntuacion}
-            onChange={(e) => setPuntuacion(e.target.value)}
+            value={form.puntuacion}
+            onChange={(e) => set('puntuacion', e.target.value)}
           />
-        </label>
+        </div>
 
-        <label>
-          Duración
+        <div className="form-field full">
+          <label htmlFor="fechaActividad">Fecha de actividad</label>
           <input
-            type="number"
-            min="5"
-            max="240"
-            value={duracionMinutos}
-            onChange={(e) => setDuracionMinutos(e.target.value)}
+            id="fechaActividad"
+            type="date"
+            value={form.fechaActividad}
+            onChange={(e) => set('fechaActividad', e.target.value)}
           />
-        </label>
-      </div>
+        </div>
 
-      <label style={{ marginTop: 10, display: 'block' }}>
-        Fecha actividad
-        <input
-          type="date"
-          value={fechaActividad}
-          onChange={(e) => setFechaActividad(e.target.value)}
-        />
-      </label>
+        <div className="form-field full">
+          <label htmlFor="notas">Notas</label>
+          <textarea
+            id="notas"
+            rows={3}
+            value={form.notas}
+            onChange={(e) => set('notas', e.target.value)}
+            placeholder="Series, sensaciones, peso usado…"
+          />
+        </div>
 
-      <label style={{ marginTop: 10, display: 'block' }}>
-        Notas
-        <textarea
-          value={notas}
-          onChange={(e) => setNotas(e.target.value)}
-          placeholder="Algo corto... (series, sensaciones, etc.)"
-          rows={3}
-        />
-      </label>
-
-      <div style={{ display: 'flex', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
-        <button type="submit">{estaEditando ? 'Guardar cambios' : 'Guardar sesión'}</button>
-        {estaEditando ? (
-          <button type="button" onClick={onCancelarEdicion}>
-            Cancelar
+        <div className="form-field actions">
+          {estaEditando && (
+            <button type="button" className="btn" onClick={onCancelarEdicion}>
+              Cancelar
+            </button>
+          )}
+          <button type="submit" className="btn btn-primary">
+            <i
+              className={`ti ${estaEditando ? 'ti-check' : 'ti-plus'}`}
+              aria-hidden="true"
+              style={{ fontSize: 14 }}
+            />
+            {estaEditando ? 'Guardar cambios' : 'Guardar sesión'}
           </button>
-        ) : null}
+        </div>
+
       </div>
     </form>
   );

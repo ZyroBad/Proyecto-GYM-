@@ -1,37 +1,93 @@
-export default function SesionCard({ sesion, onArchivar, onEditar }) {
+import { CATEGORIAS } from '../utils/categorias.js';
+
+const CAT_ICON = {
+  fuerza:        'ti-barbell',
+  cardio:        'ti-run',
+  flexibilidad:  'ti-yoga',
+  deportes:      'ti-ball-basketball',
+};
+
+function formatFecha(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+export default function SesionCard({ sesion, onEditar, onArchivar }) {
+  const cat = CATEGORIAS.find((c) => c.id === sesion.categoriaId) ?? CATEGORIAS[0];
+  const icon = CAT_ICON[sesion.categoriaId] ?? 'ti-dumbbell';
+  const dur = sesion.atributos?.duracionMinutos ?? '—';
+
   return (
-    <article
-      style={{
-        padding: '12px 14px',
-        background: 'var(--bg-card-light)',
-        border: '1px solid var(--border-soft)',
-        borderRadius: '10px 18px 12px 16px',
-        boxShadow: '0 12px 24px var(--shadow-card)'
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
-        <div>
-          <h3 style={{ margin: 0, fontSize: 16, color: 'var(--text-primary)' }}>
-            {sesion.nombre}{' '}
-            {!sesion.activo ? (
-              <span style={{ color: 'var(--text-muted)' }}>(archivada)</span>
-            ) : null}
-          </h3>
-          <p style={{ margin: '6px 0 0', color: 'var(--text-muted)' }}>
-            {sesion.categoriaId} • {sesion.estado} • {sesion.atributos?.duracionMinutos ?? '?'} min
-          </p>
+    <article className="sesion-card">
+      <div className="sesion-card-header">
+        <div className="flex items-center gap-2">
+          <div className={`cat-icon cat-icon-${sesion.categoriaId}`} aria-hidden="true">
+            <i className={`ti ${icon}`} />
+          </div>
+          <div>
+            <p className="sesion-card-title">
+              {sesion.nombre}{' '}
+              {!sesion.activo && (
+                <span className="sesion-card-archived">(archivada)</span>
+              )}
+            </p>
+            <div className="sesion-card-meta">
+              <span className={`badge badge-${sesion.categoriaId}`}>
+                {cat.emoji} {cat.nombre}
+              </span>
+              <span>·</span>
+              <span>{sesion.estado}</span>
+              {sesion.fechaActividad && (
+                <>
+                  <span>·</span>
+                  <span>{formatFecha(sesion.fechaActividad)}</span>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
-        {sesion.activo ? (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-            <button type="button" onClick={() => onEditar?.(sesion)}>
+        {sesion.activo && (
+          <div className="sesion-card-actions">
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() => onEditar?.(sesion)}
+              aria-label={`Editar sesión ${sesion.nombre}`}
+            >
+              <i className="ti ti-edit" aria-hidden="true" style={{ fontSize: 13 }} />
               Editar
             </button>
-            <button type="button" onClick={() => onArchivar(sesion.id)}>
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() => onArchivar?.(sesion.id)}
+              aria-label={`Archivar sesión ${sesion.nombre}`}
+            >
+              <i className="ti ti-archive" aria-hidden="true" style={{ fontSize: 13 }} />
               Archivar
             </button>
           </div>
-        ) : null}
+        )}
+      </div>
+
+      <div className="flex gap-3 mt-1" style={{ flexWrap: 'wrap' }}>
+        <span className="flex items-center gap-2 text-muted" style={{ fontSize: 12 }}>
+          <i className="ti ti-clock" aria-hidden="true" style={{ fontSize: 13 }} />
+          {dur} min
+        </span>
+        {sesion.puntuacion != null && (
+          <span className="flex items-center gap-2 text-muted" style={{ fontSize: 12 }}>
+            <i className="ti ti-star" aria-hidden="true" style={{ fontSize: 13 }} />
+            {sesion.puntuacion}/5
+          </span>
+        )}
+        {sesion.notas && (
+          <span className="text-muted" style={{ fontSize: 12 }}>
+            {sesion.notas.slice(0, 60)}{sesion.notas.length > 60 ? '…' : ''}
+          </span>
+        )}
       </div>
     </article>
   );
