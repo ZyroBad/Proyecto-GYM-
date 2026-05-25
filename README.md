@@ -57,6 +57,24 @@ Primera captura (fase 1):
 
 ![UI - Mi Colección Personal](docs/screenshots/fase1-ui.png)
 
+## Mi paleta de colores (Fase 2)
+
+Tema claro (6):
+- `#D2D2D2` — Fondo general gris claro, evita el blanco puro y baja el brillo en pantalla. Se siente “sala/metal” sin cansar.
+- `#F8F8F8` — Fondo principal para paneles, deja espacio para que el contenido respire. Mantiene contraste con cards sin verse plano.
+- `#E8E8E8` — Cards suaves para separar secciones sin usar líneas duras. Hace que la UI se vea más “física” y no tan digital.
+- `#0A0A0A` — Texto principal casi negro para legibilidad real en fondos claros. No es #000000, se ve menos agresivo.
+- `#545454` — Texto secundario para labels/metadata sin competir con lo importante. Mantiene contraste suficiente pero se ve más suave.
+- `#DE6542` — Acento naranja (energía/gym) para llamados a acción y highlights. Es cálido y resalta incluso con grises.
+
+Tema oscuro (6):
+- `#333331` — Fondo oscuro base, mantiene el estilo “gym” sin caer en negro puro. Ayuda a que el acento naranja destaque.
+- `#404040` — Sidebar oscuro para navegación y estructura visual. Diferencia la zona de control del contenido.
+- `#545454` — Superficie intermedia para cards/headers en oscuro. Sube el contraste sin reventar los bordes.
+- `#6D6D6D` — Detalles/hover/estados, aporta capas sin meter nuevos colores. Sirve para jerarquía visual.
+- `#FFFFFF` — Texto claro y elementos de alto contraste donde sea necesario. Se usa con cuidado para no “quemar” la vista.
+- `#C85C40` — Variante de acento para estados/hover en oscuro. Mantiene la misma familia del naranja sin cambiar el mood.
+
 ## Nota sobre ExerciseDB (más adelante)
 
 Más adelante quiero probar la API de ExerciseDB (RapidAPI) para sugerir ejercicios o autocompletar nombres, pero en esta fase todavía no está integrada.

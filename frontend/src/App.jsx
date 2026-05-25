@@ -2,7 +2,6 @@ import { useState } from 'react';
 import Sidebar from './components/Sidebar.jsx';
 import FormularioSesion from './components/FormularioSesion.jsx';
 import ListaSesiones from './components/ListaSesiones.jsx';
-import PRChart from './components/PRChart.jsx';
 import { useStorage } from './context/StorageContext.jsx';
 
 // ── Vistas ────────────────────────────────────────────────────────────
@@ -41,11 +40,6 @@ function VistaDashboard({ sesiones, onNuevaSesion }) {
           <p className="card-label">Tiempo activo</p>
           <p className="card-value">{h}h {m}m</p>
           <p className="card-subtext">total acumulado</p>
-        </div>
-
-        {/* Gráfica de PRs */}
-        <div className="card col-span-3">
-          <PRChart sesiones={sesiones} />
         </div>
 
         {/* Sesiones recientes */}
@@ -118,7 +112,10 @@ function VistaRecords({ sesiones }) {
   return (
     <div style={{ padding: '18px 24px 28px' }}>
       <div className="card">
-        <PRChart sesiones={sesiones} />
+        <div className="empty-state" style={{ padding: '24px 0' }}>
+          <i className="ti ti-tool" aria-hidden="true" />
+          <p>Sección en construcción.</p>
+        </div>
       </div>
     </div>
   );
@@ -128,7 +125,10 @@ function VistaProgreso({ sesiones }) {
   return (
     <div style={{ padding: '18px 24px 28px' }}>
       <div className="card">
-        <PRChart sesiones={sesiones} />
+        <div className="empty-state" style={{ padding: '24px 0' }}>
+          <i className="ti ti-tool" aria-hidden="true" />
+          <p>Sección en construcción.</p>
+        </div>
       </div>
     </div>
   );
@@ -141,7 +141,9 @@ export default function App() {
     cargando,
     error,
     modo,
-    setModo,
+    alternarModo,
+    labelModo,
+    labelAlternarModo,
     guardarItem,
     actualizarItem,
   } = useStorage();
@@ -203,17 +205,17 @@ export default function App() {
             <p className="topbar-subtitle">
               {cargando && 'Cargando…'}
               {!cargando && error && <span className="error-msg">{error}</span>}
-              {!cargando && !error && `Modo: ${modo}`}
+              {!cargando && !error && `Modo: ${labelModo}`}
             </p>
           </div>
           <div className="topbar-actions">
             <button
               type="button"
               className="btn"
-              onClick={() => setModo(modo === 'api' ? 'local' : 'api')}
+              onClick={alternarModo}
             >
               <i className="ti ti-refresh" aria-hidden="true" style={{ fontSize: 14 }} />
-              {modo === 'api' ? 'Cambiar a Local' : 'Cambiar a API'}
+              {labelAlternarModo}
             </button>
             <button
               type="button"

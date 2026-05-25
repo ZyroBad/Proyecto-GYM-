@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StorageContext } from './StorageContext.jsx';
 
 function leerLocal() {
@@ -24,13 +24,22 @@ export function StorageProvider({ children }) {
   const [items, setItems] = useState(() => leerLocal());
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
+  const intervalRef = useRef(null);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+  const LABELS_MODO = {
+    api: { modo: 'API', alternar: 'Cambiar a Local' },
+    local: { modo: 'LocalStorage', alternar: 'Cambiar a API' }
+  };
 
   const setModo = (nuevoModo) => {
     setModoState(nuevoModo);
     localStorage.setItem('modo', nuevoModo);
   };
+
+  const alternarModo = () => setModo(modo === 'api' ? 'local' : 'api');
+  const labelModo = (LABELS_MODO[modo] || LABELS_MODO.local).modo;
+  const labelAlternarModo = (LABELS_MODO[modo] || LABELS_MODO.local).alternar;
 
   const obtenerItems = useCallback(async () => {
     setCargando(true);
@@ -150,10 +159,35 @@ export function StorageProvider({ children }) {
     obtenerItems();
   }, [modo, obtenerItems]);
 
+  // useRef (fase 2): guardar el id del setInterval sin provocar re-render.
+  // Solo lo uso cuando estoy en modo API para refrescar datos de vez en cuando.
+  useEffect(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    if (modo !== 'api') return;
+
+    intervalRef.current = setInterval(() => {
+      obtenerItems();
+    }, 15000);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [modo, obtenerItems]);
+
   const value = useMemo(
     () => ({
       modo,
       setModo,
+      alternarModo,
+      labelModo,
+      labelAlternarModo,
       items,
       cargando,
       error,
@@ -162,9 +196,19 @@ export function StorageProvider({ children }) {
       actualizarItem,
       eliminarItem
     }),
-    [modo, items, cargando, error, obtenerItems, guardarItem, actualizarItem, eliminarItem]
+    [
+      modo,
+      items,
+      cargando,
+      error,
+      obtenerItems,
+      guardarItem,
+      actualizarItem,
+      eliminarItem,
+      labelModo,
+      labelAlternarModo
+    ]
   );
 
   return <StorageContext.Provider value={value}>{children}</StorageContext.Provider>;
 }
-
