@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { StorageContext } from './StorageContext.jsx';
+import { initialState, itemsReducer } from '../reducers/itemsReducer.js';
 
 function leerLocal() {
   try {
@@ -21,7 +22,10 @@ function guardarLocal(items) {
 
 export function StorageProvider({ children }) {
   const [modo, setModoState] = useState(() => localStorage.getItem('modo') || 'local');
-  const [items, setItems] = useState(() => leerLocal());
+  const [state, dispatch] = useReducer(itemsReducer, {
+    ...initialState,
+    lista: leerLocal()
+  });
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
   const intervalRef = useRef(null);
@@ -50,11 +54,11 @@ export function StorageProvider({ children }) {
         const res = await fetch(`${API_URL}/api/items`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        setItems(data);
+        dispatch({ type: 'HIDRATAR', payload: data });
         return data;
       } else {
         const data = leerLocal();
-        setItems(data);
+        dispatch({ type: 'HIDRATAR', payload: data });
         return data;
       }
     } catch (err) {
@@ -70,12 +74,8 @@ export function StorageProvider({ children }) {
     async (item) => {
       setError(null);
 
-      // optimista: siempre lo meto al estado para que la UI se sienta rápida
-      setItems((prev) => {
-        const yaExiste = prev.some((x) => x.id === item.id);
-        if (yaExiste) return prev.map((x) => (x.id === item.id ? item : x));
-        return [item, ...prev];
-      });
+      // optimista: siempre lo meto al estado
+      dispatch({ type: 'AGREGAR', payload: item });
 
       try {
         if (modo === 'api') {
@@ -103,7 +103,7 @@ export function StorageProvider({ children }) {
   const actualizarItem = useCallback(
     async (item) => {
       setError(null);
-      setItems((prev) => prev.map((x) => (x.id === item.id ? item : x)));
+      dispatch({ type: 'AGREGAR', payload: item });
 
       try {
         if (modo === 'api') {
@@ -129,11 +129,18 @@ export function StorageProvider({ children }) {
   const eliminarItem = useCallback(
     async (id) => {
       setError(null);
-      setItems((prev) => prev.filter((x) => x.id !== id));
+      dispatch({ type: 'ELIMINAR', payload: id });
 
       try {
         if (modo === 'api') {
-          const res = await fetch(`${API_URL}/api/items/${id}`, { method: 'DELETE' });
+          // Fase 3: "eliminar" = archivar (activo=false)
+          const item = state.lista.find((x) => x.id === id);
+          if (!item) return false;
+          const res = await fetch(`${API_URL}/api/items/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...item, activo: false })
+          });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           return true;
         } else {
@@ -145,14 +152,39 @@ export function StorageProvider({ children }) {
         return false;
       }
     },
+    [API_URL, modo, state.lista]
+  );
+
+  const registrarActividad = useCallback(
+    async (id, registro) => {
+      setError(null);
+      dispatch({ type: 'REGISTRAR_ACTIVIDAD', payload: { id, registro } });
+
+      try {
+        if (modo === 'api') {
+          const res = await fetch(`${API_URL}/api/items/${id}/registro`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(registro)
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return await res.json();
+        }
+        return registro;
+      } catch (err) {
+        console.log('Error en registrarActividad:', err);
+        setError(err.message || 'Error registrando actividad');
+        return null;
+      }
+    },
     [API_URL, modo]
   );
 
   // cuando estoy en local, sincronizo a localStorage
   useEffect(() => {
     if (modo !== 'local') return;
-    guardarLocal(items);
-  }, [items, modo]);
+    guardarLocal(state.lista);
+  }, [state.lista, modo]);
 
   // cada vez que cambio modo, recargo
   useEffect(() => {
@@ -188,17 +220,23 @@ export function StorageProvider({ children }) {
       alternarModo,
       labelModo,
       labelAlternarModo,
-      items,
+      items: state.lista,
+      filtroCategoria: state.filtroCategoria,
+      filtroEstado: state.filtroEstado,
+      busqueda: state.busqueda,
       cargando,
       error,
       obtenerItems,
       guardarItem,
       actualizarItem,
-      eliminarItem
+      eliminarItem,
+      registrarActividad,
+      setFiltros: (payload) => dispatch({ type: 'FILTRAR', payload }),
+      limpiarFiltros: () => dispatch({ type: 'LIMPIAR_FILTROS' }),
+      cambiarEstado: (id, estado) => dispatch({ type: 'CAMBIAR_ESTADO', payload: { id, estado } })
     }),
     [
       modo,
-      items,
       cargando,
       error,
       obtenerItems,
@@ -206,7 +244,12 @@ export function StorageProvider({ children }) {
       actualizarItem,
       eliminarItem,
       labelModo,
-      labelAlternarModo
+      labelAlternarModo,
+      state.lista,
+      state.filtroCategoria,
+      state.filtroEstado,
+      state.busqueda,
+      registrarActividad
     ]
   );
 
