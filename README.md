@@ -78,3 +78,31 @@ Tema oscuro (6):
 ## Nota sobre ExerciseDB (más adelante)
 
 Más adelante quiero probar la API de ExerciseDB (RapidAPI) para sugerir ejercicios o autocompletar nombres, pero en esta fase todavía no está integrada.
+
+## Fase 3 — useReducer, gráficas y optimización
+
+### Mis gráficas (Recharts)
+
+- Actividad (últimos 7 días): cuántas sesiones registré por día.
+- Distribución por categoría: para ver mi balance (fuerza/cardio/flexibilidad/deportes).
+- Mi gráfica original: **Duración por estado** (min). La elegí porque me dice si tengo muchas sesiones “pendientes/pausadas” acumuladas.
+
+### Evidencia con React DevTools Profiler
+
+Antes (sin optimización):
+
+![Profiler antes](docs/profiler/antes.png)
+
+Después (con `useMemo` + `useCallback`):
+
+![Profiler después](docs/profiler/despues.png)
+
+Análisis (resumen):
+- Antes: al escribir en el buscador, se re-renderizaban más componentes y el commit tardaba más.
+- Después: `listaFiltrada` y estadísticas se memoizan, y los handlers son estables; disminuyen re-renders en la lista y tarjetas.
+
+### Mis 3 decisiones técnicas
+
+1) Reducer: mantuve acciones separadas y el reducer puro (sin fetch/fechas).
+2) Acción más difícil: `REGISTRAR_ACTIVIDAD` porque toca historial del item y en modo API se persiste.
+3) Gráficas: transformé datos en estructuras simples (agrupar por día / contar por categoría / sumar duración).
