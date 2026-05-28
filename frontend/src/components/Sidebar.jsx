@@ -2,10 +2,10 @@ const NAV_ITEMS = [
   {
     section: 'Entrenamiento',
     items: [
-      { icon: 'ti-layout-dashboard', label: 'Dashboard',  view: 'dashboard' },
-      { icon: 'ti-calendar-stats',   label: 'Bitácora',   view: 'bitacora'  },
-      { icon: 'ti-trophy',           label: 'Records (PR)', view: 'records' },
-      { icon: 'ti-chart-line',       label: 'Progreso',   view: 'progreso'  },
+      { icon: 'ti-layout-grid', label: 'Dashboard', view: 'dashboard' },
+      { icon: 'ti-calendar-time', label: 'Bitácora', view: 'bitacora' },
+      { icon: 'ti-trophy', label: 'Records (PR)', view: 'records' },
+      { icon: 'ti-chart-line', label: 'Progreso', view: 'progreso' }
     ],
   },
 ];

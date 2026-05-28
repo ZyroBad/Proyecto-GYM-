@@ -8,6 +8,14 @@ import {
 } from 'recharts';
 import { CATEGORIAS, categoriaPorId } from '../../utils/categorias.js';
 
+// Colores más diferenciables para la gráfica (sin afectar el resto de la UI)
+const COLOR_CATEGORIA = {
+  fuerza: '#DE6542', // naranja principal
+  cardio: '#2B6CB0', // azul
+  flexibilidad: '#2F855A', // verde
+  deportes: '#805AD5' // morado
+};
+
 export default function DistribucionCategoriaPie({ sesiones }) {
   const counts = new Map(CATEGORIAS.map((c) => [c.id, 0]));
 
@@ -19,7 +27,12 @@ export default function DistribucionCategoriaPie({ sesiones }) {
   const data = Array.from(counts.entries())
     .map(([id, value]) => {
       const c = categoriaPorId(id);
-      return { id, name: `${c.emoji} ${c.nombre}`, value, color: c.color };
+      return {
+        id,
+        name: `${c.emoji} ${c.nombre}`,
+        value,
+        color: COLOR_CATEGORIA[id] || c.color || '#999999'
+      };
     })
     .filter((x) => x.value > 0);
 

@@ -39,9 +39,27 @@ export default function DuracionPorEstadoChart({ sesiones }) {
           <YAxis tick={{ fontSize: 11 }} />
           <Tooltip />
           <Legend />
-          <Bar name="Pendiente (min)" dataKey="pendiente" stackId="a" fill="#898685" radius={[6, 6, 0, 0]} />
-          <Bar name="Pausada (min)" dataKey="pausada" stackId="a" fill="#545454" radius={[6, 6, 0, 0]} />
-          <Bar name="Completada (min)" dataKey="completada" stackId="a" fill="#DE6542" radius={[6, 6, 0, 0]} />
+          <Bar
+            name="Pendiente (min)"
+            dataKey="pendiente"
+            stackId="a"
+            fill="#F59E0B"
+            radius={[6, 6, 0, 0]}
+          />
+          <Bar
+            name="Pausada (min)"
+            dataKey="pausada"
+            stackId="a"
+            fill="#6366F1"
+            radius={[6, 6, 0, 0]}
+          />
+          <Bar
+            name="Completada (min)"
+            dataKey="completada"
+            stackId="a"
+            fill="#DE6542"
+            radius={[6, 6, 0, 0]}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>
