@@ -1,3 +1,4 @@
+import React from 'react';
 import { CATEGORIAS } from '../utils/categorias.js';
 
 const CAT_ICON = {
@@ -13,7 +14,7 @@ function formatFecha(iso) {
   return d.toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-export default function SesionCard({ sesion, onEditar, onArchivar }) {
+function SesionCard({ sesion, onEditar, onArchivar }) {
   const cat = CATEGORIAS.find((c) => c.id === sesion.categoriaId) ?? CATEGORIAS[0];
   const icon = CAT_ICON[sesion.categoriaId] ?? 'ti-dumbbell';
   const dur = sesion.atributos?.duracionMinutos ?? '—';
@@ -92,3 +93,5 @@ export default function SesionCard({ sesion, onEditar, onArchivar }) {
     </article>
   );
 }
+
+export default React.memo(SesionCard);
