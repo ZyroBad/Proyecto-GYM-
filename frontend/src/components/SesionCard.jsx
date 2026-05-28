@@ -2,10 +2,10 @@ import React from 'react';
 import { CATEGORIAS } from '../utils/categorias.js';
 
 const CAT_ICON = {
-  fuerza:        'ti-barbell',
-  cardio:        'ti-run',
-  flexibilidad:  'ti-yoga',
-  deportes:      'ti-ball-basketball',
+  fuerza: 'ti-barbell',
+  cardio: 'ti-run',
+  flexibilidad: 'ti-yoga',
+  deportes: 'ti-ball-basketball'
 };
 
 function formatFecha(iso) {
@@ -14,7 +14,7 @@ function formatFecha(iso) {
   return d.toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function SesionCard({ sesion, onEditar, onArchivar }) {
+function SesionCard({ sesion, onEditar, onArchivar, onMarcarCompletada }) {
   const cat = CATEGORIAS.find((c) => c.id === sesion.categoriaId) ?? CATEGORIAS[0];
   const icon = CAT_ICON[sesion.categoriaId] ?? 'ti-dumbbell';
   const dur = sesion.atributos?.duracionMinutos ?? '—';
@@ -29,9 +29,7 @@ function SesionCard({ sesion, onEditar, onArchivar }) {
           <div>
             <p className="sesion-card-title">
               {sesion.nombre}{' '}
-              {!sesion.activo && (
-                <span className="sesion-card-archived">(archivada)</span>
-              )}
+              {!sesion.activo && <span className="sesion-card-archived">(archivada)</span>}
             </p>
             <div className="sesion-card-meta">
               <span className={`badge badge-${sesion.categoriaId}`}>
@@ -51,6 +49,17 @@ function SesionCard({ sesion, onEditar, onArchivar }) {
 
         {sesion.activo && (
           <div className="sesion-card-actions">
+            {sesion.estado !== 'completada' && (
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                onClick={() => onMarcarCompletada?.(sesion.id)}
+                aria-label={`Marcar como completada ${sesion.nombre}`}
+              >
+                <i className="ti ti-check" aria-hidden="true" style={{ fontSize: 13 }} />
+                Completar
+              </button>
+            )}
             <button
               type="button"
               className="btn btn-sm"
@@ -86,7 +95,8 @@ function SesionCard({ sesion, onEditar, onArchivar }) {
         )}
         {sesion.notas && (
           <span className="text-muted" style={{ fontSize: 12 }}>
-            {sesion.notas.slice(0, 60)}{sesion.notas.length > 60 ? '…' : ''}
+            {sesion.notas.slice(0, 60)}
+            {sesion.notas.length > 60 ? '…' : ''}
           </span>
         )}
       </div>
@@ -95,3 +105,4 @@ function SesionCard({ sesion, onEditar, onArchivar }) {
 }
 
 export default React.memo(SesionCard);
+

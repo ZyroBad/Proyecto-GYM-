@@ -180,6 +180,38 @@ export function StorageProvider({ children }) {
     [API_URL, modo]
   );
 
+  const cambiarEstado = useCallback(
+    async (id, estado) => {
+      if (!id || !estado) return false;
+
+      setError(null);
+      dispatch({ type: 'CAMBIAR_ESTADO', payload: { id, estado } });
+
+      try {
+        const item = state.lista.find((x) => x.id === id);
+        if (!item) return false;
+
+        const actualizado = { ...item, estado };
+
+        if (modo === 'api') {
+          const res = await fetch(`${API_URL}/api/items/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(actualizado)
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        }
+
+        return true;
+      } catch (err) {
+        console.log('Error en cambiarEstado:', err);
+        setError(err.message || 'Error cambiando estado');
+        return false;
+      }
+    },
+    [API_URL, modo, state.lista]
+  );
+
   // cuando estoy en local, sincronizo a localStorage
   useEffect(() => {
     if (modo !== 'local') return;
@@ -233,7 +265,7 @@ export function StorageProvider({ children }) {
       registrarActividad,
       setFiltros: (payload) => dispatch({ type: 'FILTRAR', payload }),
       limpiarFiltros: () => dispatch({ type: 'LIMPIAR_FILTROS' }),
-      cambiarEstado: (id, estado) => dispatch({ type: 'CAMBIAR_ESTADO', payload: { id, estado } })
+      cambiarEstado
     }),
     [
       modo,
@@ -249,7 +281,8 @@ export function StorageProvider({ children }) {
       state.filtroCategoria,
       state.filtroEstado,
       state.busqueda,
-      registrarActividad
+      registrarActividad,
+      cambiarEstado
     ]
   );
 

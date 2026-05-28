@@ -1,6 +1,6 @@
 import SesionCard from './SesionCard.jsx';
 
-export default function ListaSesiones({ sesiones, onEditar, onArchivar }) {
+export default function ListaSesiones({ sesiones, onEditar, onArchivar, onMarcarCompletada }) {
   if (!sesiones.length) {
     return (
       <div className="empty-state">
@@ -18,6 +18,7 @@ export default function ListaSesiones({ sesiones, onEditar, onArchivar }) {
           sesion={sesion}
           onEditar={onEditar}
           onArchivar={onArchivar}
+          onMarcarCompletada={onMarcarCompletada}
         />
       ))}
     </div>

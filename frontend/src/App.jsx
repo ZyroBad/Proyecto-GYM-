@@ -163,7 +163,8 @@ function VistaBitacora({
   onCambiarFiltros,
   onLimpiarFiltros,
   onEditar,
-  onArchivar
+  onArchivar,
+  onMarcarCompletada
 }) {
   return (
     <div style={{ padding: '18px 24px 28px' }}>
@@ -222,6 +223,7 @@ function VistaBitacora({
         sesiones={sesiones.filter((s) => s.activo)}
         onEditar={onEditar}
         onArchivar={onArchivar}
+        onMarcarCompletada={onMarcarCompletada}
       />
     </div>
   );
@@ -265,6 +267,8 @@ export default function App() {
     labelAlternarModo,
     guardarItem,
     actualizarItem,
+    cambiarEstado,
+    registrarActividad,
     filtroCategoria,
     filtroEstado,
     busqueda,
@@ -308,6 +312,19 @@ export default function App() {
       await actualizarItem({ ...s, activo: false });
     },
     [sesiones, sesionEditando?.id, actualizarItem]
+  );
+
+  const marcarCompletada = useCallback(
+    async (id) => {
+      const ok = await cambiarEstado(id, 'completada');
+      if (!ok) return;
+
+      await registrarActividad(id, {
+        fecha: new Date().toISOString(),
+        nota: 'Marcada como completada desde la tarjeta'
+      });
+    },
+    [cambiarEstado, registrarActividad]
   );
 
   const iniciarEdicion = useCallback((sesion) => {
@@ -423,6 +440,7 @@ export default function App() {
             onLimpiarFiltros={limpiarFiltros}
             onEditar={iniciarEdicion}
             onArchivar={archivarSesion}
+            onMarcarCompletada={marcarCompletada}
           />
         )}
         {vista === 'records'  && <VistaRecords  sesiones={sesiones} />}
