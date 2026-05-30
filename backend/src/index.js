@@ -6,7 +6,19 @@ const itemsRouter = require('./routes/items');
 
 const app = express();
 
-app.use(cors());
+// CORS (fase 4): en Render/Vercel el frontend y backend son dominios distintos.
+// Si FRONTEND_URL está definido, solo permito ese origen.
+// En local, si no está definido, dejo abierto para no trabarme.
+const frontendUrl = process.env.FRONTEND_URL;
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      if (!frontendUrl) return cb(null, true);
+      if (!origin) return cb(null, true); // Postman/cURL o mismo host
+      return cb(null, origin === frontendUrl);
+    }
+  })
+);
 app.use(express.json());
 
 // ruta simple para ver que el backend levantó
