@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { StorageContext } from './StorageContext.jsx';
 import { initialState, itemsReducer } from '../reducers/itemsReducer.js';
+import { useLocalStorage } from '../hooks/useLocalStorage.js';
 
 function leerLocal() {
   try {
@@ -21,7 +22,7 @@ function guardarLocal(items) {
 }
 
 export function StorageProvider({ children }) {
-  const [modo, setModoState] = useState(() => localStorage.getItem('modo') || 'local');
+  const [modo, setModo] = useLocalStorage('modo', 'local');
   const [state, dispatch] = useReducer(itemsReducer, {
     ...initialState,
     lista: leerLocal()
@@ -34,11 +35,6 @@ export function StorageProvider({ children }) {
   const LABELS_MODO = {
     api: { modo: 'API', alternar: 'Cambiar a Local' },
     local: { modo: 'LocalStorage', alternar: 'Cambiar a API' }
-  };
-
-  const setModo = (nuevoModo) => {
-    setModoState(nuevoModo);
-    localStorage.setItem('modo', nuevoModo);
   };
 
   const alternarModo = () => setModo(modo === 'api' ? 'local' : 'api');
