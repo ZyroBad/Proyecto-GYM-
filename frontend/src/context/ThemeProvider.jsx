@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ThemeContext } from './ThemeContext.jsx';
+import { useAtajoTeclado } from '../hooks/useAtajoTeclado.js';
 
 const KEY_TEMA = 'tema';
 
@@ -23,23 +24,13 @@ export function ThemeProvider({ children }) {
     aplicarTemaAlBody(tema);
   }, [tema]);
 
-  useEffect(() => {
-    function onKeyDown(e) {
-      // Atajo fase 2: T cambia tema
-      if (e.key.toLowerCase() === 't') {
-        // si está escribiendo en un input, no molesto
-        const tag = document.activeElement?.tagName?.toLowerCase();
-        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
-        alternarTema();
-      }
-    }
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [tema]);
+  useAtajoTeclado(
+    (e) => e.key.toLowerCase() === 't',
+    () => alternarTema(),
+    { ignoreInputs: true }
+  );
 
   const value = useMemo(() => ({ tema, setTema, alternarTema }), [tema]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
-

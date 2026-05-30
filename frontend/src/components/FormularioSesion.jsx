@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { CATEGORIAS } from '../utils/categorias.js';
+import { useAtajoTeclado } from '../hooks/useAtajoTeclado.js';
 
 const ESTADOS = ['pendiente', 'completada', 'pausada'];
 
@@ -38,16 +39,14 @@ export default function FormularioSesion({
   }, [sesionEditando]);
 
   // Ctrl+N enfoca el nombre
-  useEffect(() => {
-    function onKey(e) {
-      if (e.ctrlKey && e.key.toLowerCase() === 'n') {
-        e.preventDefault();
-        nombreRef.current?.focus();
-      }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  useAtajoTeclado(
+    (e) => e.ctrlKey && e.key.toLowerCase() === 'n',
+    (e) => {
+      e.preventDefault();
+      nombreRef.current?.focus();
+    },
+    { ignoreInputs: false }
+  );
 
   function set(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
