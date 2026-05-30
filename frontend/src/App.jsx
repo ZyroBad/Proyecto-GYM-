@@ -8,6 +8,7 @@ import Actividad7DiasChart from './components/charts/Actividad7DiasChart.jsx';
 import DistribucionCategoriaPie from './components/charts/DistribucionCategoriaPie.jsx';
 import DuracionPorEstadoChart from './components/charts/DuracionPorEstadoChart.jsx';
 import { useRacha } from './hooks/useRacha.js';
+import EjerciciosDB from './components/EjerciciosDB.jsx';
 
 // ── Vistas ────────────────────────────────────────────────────────────
 function VistaDashboard({ sesiones, onNuevaSesion }) {
@@ -61,10 +62,28 @@ function VistaDashboard({ sesiones, onNuevaSesion }) {
           <p className="card-value">{h}h {m}m</p>
           <p className="card-subtext">total acumulado</p>
         </div>
-        <div className="card">
-          <p className="card-label">Racha</p>
-          <p className="card-value">{rachaActual} d</p>
-          <p className="card-subtext">mejor: {mejorRacha} d</p>
+
+        {/* Columna izquierda: racha + categorías, para llenar el espacio */}
+        <div className="dash-left">
+          <div className="card">
+            <p className="card-label">Racha</p>
+            <p className="card-value">{rachaActual} d</p>
+            <p className="card-subtext">mejor: {mejorRacha} d</p>
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <h3>
+                <i
+                  className="ti ti-chart-pie"
+                  aria-hidden="true"
+                  style={{ fontSize: 15, color: 'var(--accent)', verticalAlign: '-2px', marginRight: 5 }}
+                />
+                Categorías
+              </h3>
+            </div>
+            <DistribucionCategoriaPie sesiones={activas} />
+          </div>
         </div>
 
         {/* Gráficas (Recharts) */}
@@ -80,20 +99,6 @@ function VistaDashboard({ sesiones, onNuevaSesion }) {
             </h3>
           </div>
           <Actividad7DiasChart sesiones={activas} />
-        </div>
-
-        <div className="card">
-          <div className="card-head">
-            <h3>
-              <i
-                className="ti ti-chart-pie"
-                aria-hidden="true"
-                style={{ fontSize: 15, color: 'var(--accent)', verticalAlign: '-2px', marginRight: 5 }}
-              />
-              Categorías
-            </h3>
-          </div>
-          <DistribucionCategoriaPie sesiones={activas} />
         </div>
 
         <div className="card col-span-3">
@@ -237,25 +242,160 @@ function VistaBitacora({
 }
 
 function VistaRecords({ sesiones }) {
+  const [busquedaPr, setBusquedaPr] = useState('');
+
+  const prs = useMemo(() => {
+    const mapa = new Map();
+
+    for (const s of sesiones || []) {
+      if (!s?.activo) continue;
+      const ejercicios = s?.atributos?.ejercicios ?? [];
+      if (!Array.isArray(ejercicios)) continue;
+
+      for (const ej of ejercicios) {
+        const nombre = String(ej?.nombre || '').trim();
+        if (!nombre) continue;
+
+        const peso = Number(ej?.pesoKg ?? 0);
+        const reps = Number(ej?.reps ?? 0);
+        const series = Number(ej?.series ?? 0);
+        const volumen = Math.max(0, peso) * Math.max(0, reps || 1) * Math.max(0, series || 1);
+
+        const actual = mapa.get(nombre);
+        if (!actual || peso > actual.peso || (peso === actual.peso && reps > actual.reps)) {
+          mapa.set(nombre, { nombre, peso, reps, series, volumen });
+        }
+      }
+    }
+
+    return Array.from(mapa.values()).sort((a, b) => b.peso - a.peso);
+  }, [sesiones]);
+
+  const prsFiltrados = useMemo(() => {
+    const texto = busquedaPr.trim().toLowerCase();
+    if (!texto) return prs.slice(0, 30);
+    return prs.filter((p) => String(p.nombre || '').toLowerCase().includes(texto)).slice(0, 30);
+  }, [prs, busquedaPr]);
+
   return (
     <div style={{ padding: '18px 24px 28px' }}>
       <div className="card">
-        <div className="empty-state" style={{ padding: '24px 0' }}>
-          <i className="ti ti-tool" aria-hidden="true" />
-          <p>Sección en construcción.</p>
+        <div className="card-head">
+          <h3>
+            <i
+              className="ti ti-trophy"
+              aria-hidden="true"
+              style={{ fontSize: 15, color: 'var(--accent)', verticalAlign: '-2px', marginRight: 5 }}
+            />
+            Tus PRs (simple)
+          </h3>
         </div>
+
+        {!prs.length ? (
+          <div className="empty-state" style={{ padding: '18px 0' }}>
+            <i className="ti ti-mood-empty" aria-hidden="true" />
+            <p>
+              Todavía no hay PRs.
+              <br />
+              Agregá ejercicios con `pesoKg`, `series` y `reps` en una sesión.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="pr-search">
+              <label className="input-label" htmlFor="buscar-pr">
+                Buscar ejercicio
+              </label>
+              <input
+                id="buscar-pr"
+                className="input"
+                value={busquedaPr}
+                onChange={(e) => setBusquedaPr(e.target.value)}
+                placeholder="Ej: bench, squat, pull..."
+                autoComplete="off"
+              />
+            </div>
+
+            <div className="pr-grid" role="list">
+              {prsFiltrados.map((p) => (
+              <div key={p.nombre} className="pr-row">
+                <div style={{ minWidth: 0 }}>
+                  <p className="pr-name" title={p.nombre}>
+                    {p.nombre}
+                  </p>
+                  <p className="pr-sub">
+                    {p.series}x{p.reps} • volumen {Math.round(p.volumen)} kg·rep
+                  </p>
+                </div>
+                <div className="pr-pill">{p.peso} kg</div>
+              </div>
+            ))}
+          </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
 function VistaProgreso({ sesiones }) {
+  const resumen = useMemo(() => {
+    const lista = (sesiones || []).filter((s) => s?.activo);
+
+    let completadas = 0;
+    let pendientes = 0;
+    let pausadas = 0;
+    let duracionTotal = 0;
+
+    for (const s of lista) {
+      if (s.estado === 'completada') completadas++;
+      if (s.estado === 'pendiente') pendientes++;
+      if (s.estado === 'pausada') pausadas++;
+      duracionTotal += Number(s?.atributos?.duracionMinutos ?? 0);
+    }
+
+    return { completadas, pendientes, pausadas, duracionTotal };
+  }, [sesiones]);
+
+  const h = Math.floor(resumen.duracionTotal / 60);
+  const m = resumen.duracionTotal % 60;
+
   return (
     <div style={{ padding: '18px 24px 28px' }}>
-      <div className="card">
-        <div className="empty-state" style={{ padding: '24px 0' }}>
-          <i className="ti ti-tool" aria-hidden="true" />
-          <p>Sección en construcción.</p>
+      <div className="content" style={{ padding: 0 }}>
+        <div className="card">
+          <p className="card-label">Completadas</p>
+          <p className="card-value">{resumen.completadas}</p>
+          <p className="card-subtext">sesiones</p>
+        </div>
+        <div className="card">
+          <p className="card-label">Pendientes</p>
+          <p className="card-value">{resumen.pendientes}</p>
+          <p className="card-subtext">sesiones</p>
+        </div>
+        <div className="card">
+          <p className="card-label">Pausadas</p>
+          <p className="card-value">{resumen.pausadas}</p>
+          <p className="card-subtext">sesiones</p>
+        </div>
+
+        <div className="card col-span-3">
+          <div className="card-head">
+            <h3>
+              <i
+                className="ti ti-clock"
+                aria-hidden="true"
+                style={{ fontSize: 15, color: 'var(--accent)', verticalAlign: '-2px', marginRight: 5 }}
+              />
+              Tiempo acumulado
+            </h3>
+          </div>
+          <p style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>
+            {h}h {m}m
+          </p>
+          <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
+            (Suma de duraciónMinutos de todas tus sesiones activas)
+          </p>
         </div>
       </div>
     </div>
@@ -286,12 +426,14 @@ export default function App() {
   const [vista, setVista] = useState('dashboard');
   const [sesionEditando, setSesionEditando] = useState(null);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [ejercicioParaAgregar, setEjercicioParaAgregar] = useState(null);
 
   const TITULO = {
     dashboard: 'Dashboard',
     bitacora:  'Bitácora de sesiones',
     records:   'Personal Records (PRs)',
     progreso:  'Progreso',
+    ejercicios:'Ejercicios DB',
   };
 
   const guardarSesion = useCallback(
@@ -345,6 +487,13 @@ export default function App() {
   }, []);
 
   const irANuevaSesion = useCallback(() => {
+    setSesionEditando(null);
+    setMostrarFormulario(true);
+    setVista('bitacora');
+  }, []);
+
+  const usarEjercicioDeDB = useCallback((ej) => {
+    setEjercicioParaAgregar(ej);
     setSesionEditando(null);
     setMostrarFormulario(true);
     setVista('bitacora');
@@ -427,6 +576,8 @@ export default function App() {
                 sesionEditando={sesionEditando}
                 onActualizar={actualizarSesion}
                 onCancelarEdicion={cancelarEdicion}
+                ejercicioParaAgregar={ejercicioParaAgregar}
+                onEjercicioAgregado={() => setEjercicioParaAgregar(null)}
               />
             </div>
           </div>
@@ -452,6 +603,7 @@ export default function App() {
         )}
         {vista === 'records'  && <VistaRecords  sesiones={sesiones} />}
         {vista === 'progreso' && <VistaProgreso sesiones={sesiones} />}
+        {vista === 'ejercicios' && <EjerciciosDB onUsarEjercicio={usarEjercicioDeDB} />}
       </div>
     </div>
   );

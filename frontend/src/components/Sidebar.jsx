@@ -8,6 +8,10 @@ const NAV_ITEMS = [
       { icon: 'ti-chart-line', label: 'Progreso', view: 'progreso' }
     ],
   },
+  {
+    section: 'App',
+    items: [{ icon: 'ti-database', label: 'Ejercicios DB', view: 'ejercicios' }]
+  }
 ];
 
 export default function Sidebar({ vistaActiva, onCambiarVista }) {
