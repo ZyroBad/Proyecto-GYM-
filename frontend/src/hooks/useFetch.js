@@ -14,6 +14,12 @@ export function useFetch(url, options = {}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const abortRef = useRef(null);
+  const optionsRef = useRef(options);
+
+  // Evita loops: `options` puede ser un objeto nuevo en cada render.
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
   const run = useCallback(async () => {
     if (!url) return null;
@@ -26,7 +32,7 @@ export function useFetch(url, options = {}) {
     setError(null);
 
     try {
-      const res = await fetch(url, { ...options, signal: controller.signal });
+      const res = await fetch(url, { ...(optionsRef.current || {}), signal: controller.signal });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       setData(json);
@@ -38,7 +44,7 @@ export function useFetch(url, options = {}) {
     } finally {
       setLoading(false);
     }
-  }, [url, options]);
+  }, [url]);
 
   useEffect(() => {
     run();
