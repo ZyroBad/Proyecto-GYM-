@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { StorageContext } from './StorageContext.jsx';
 import { initialState, itemsReducer } from '../reducers/itemsReducer.js';
 import { useLocalStorage } from '../hooks/useLocalStorage.js';
+import { useFetch } from '../hooks/useFetch.js';
 
 function leerLocal() {
   try {
@@ -41,30 +42,47 @@ export function StorageProvider({ children }) {
   const labelModo = (LABELS_MODO[modo] || LABELS_MODO.local).modo;
   const labelAlternarModo = (LABELS_MODO[modo] || LABELS_MODO.local).alternar;
 
-  const obtenerItems = useCallback(async () => {
-    setCargando(true);
-    setError(null);
+  const apiItemsUrl = modo === 'api' ? `${API_URL}/api/items` : null;
+  const {
+    data: apiItems,
+    loading: apiLoading,
+    error: apiError,
+    refetch: refetchApiItems
+  } = useFetch(apiItemsUrl);
 
-    try {
-      if (modo === 'api') {
-        const res = await fetch(`${API_URL}/api/items`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        dispatch({ type: 'HIDRATAR', payload: data });
-        return data;
-      } else {
-        const data = leerLocal();
+  const obtenerItems = useCallback(async () => {
+    if (modo === 'api') {
+      const data = await refetchApiItems();
+      if (Array.isArray(data)) {
         dispatch({ type: 'HIDRATAR', payload: data });
         return data;
       }
-    } catch (err) {
-      console.log('Error en obtenerItems:', err);
-      setError(err.message || 'Error cargando items');
       return [];
-    } finally {
-      setCargando(false);
     }
-  }, [API_URL, modo]);
+
+    const data = leerLocal();
+    dispatch({ type: 'HIDRATAR', payload: data });
+    return data;
+  }, [modo, refetchApiItems]);
+
+  // Cuando cambian los items de la API (por fetch), hidrato el reducer.
+  useEffect(() => {
+    if (modo !== 'api') return;
+    if (!Array.isArray(apiItems)) return;
+    dispatch({ type: 'HIDRATAR', payload: apiItems });
+  }, [modo, apiItems]);
+
+  // Mapeo estados del hook a los estados del provider para no cambiar la UI.
+  useEffect(() => {
+    if (modo !== 'api') {
+      setCargando(false);
+      setError(null);
+      return;
+    }
+
+    setCargando(Boolean(apiLoading));
+    setError(apiError || null);
+  }, [modo, apiLoading, apiError]);
 
   const guardarItem = useCallback(
     async (item) => {
