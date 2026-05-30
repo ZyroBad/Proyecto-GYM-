@@ -7,10 +7,12 @@ import { CATEGORIAS } from './utils/categorias.js';
 import Actividad7DiasChart from './components/charts/Actividad7DiasChart.jsx';
 import DistribucionCategoriaPie from './components/charts/DistribucionCategoriaPie.jsx';
 import DuracionPorEstadoChart from './components/charts/DuracionPorEstadoChart.jsx';
+import { useRacha } from './hooks/useRacha.js';
 
 // ── Vistas ────────────────────────────────────────────────────────────
 function VistaDashboard({ sesiones, onNuevaSesion }) {
   const activas = useMemo(() => sesiones.filter((s) => s.activo), [sesiones]);
+  const { rachaActual, mejorRacha } = useRacha(activas);
 
   const stats = useMemo(() => {
     const completadas = activas.filter((s) => s.estado === 'completada');
@@ -58,6 +60,11 @@ function VistaDashboard({ sesiones, onNuevaSesion }) {
           <p className="card-label">Tiempo activo</p>
           <p className="card-value">{h}h {m}m</p>
           <p className="card-subtext">total acumulado</p>
+        </div>
+        <div className="card">
+          <p className="card-label">Racha</p>
+          <p className="card-value">{rachaActual} d</p>
+          <p className="card-subtext">mejor: {mejorRacha} d</p>
         </div>
 
         {/* Gráficas (Recharts) */}
